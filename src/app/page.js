@@ -11,6 +11,7 @@ export default function Home() {
   const [delay, setDelay] = useState(0);
   const [timeUnit, setTimeUnit] = useState("seconds");
   const [messageArray, setMessageArray] = useState([]);
+  const [isSending, setSending] = useState(false);
 
   const handleInputChange = (event) => {
     setTextMessage(event.target.value);
@@ -44,10 +45,12 @@ export default function Home() {
   const handleSendMessage = async () => {
     try {
       const delayInMilliseconds = convertToMilliseconds(delay, timeUnit);
+      setSending(true);
       setTimeout(async () => {
-        const response = await sendMessage(textMessage, webhookUrl);
+        await sendMessage(textMessage, webhookUrl);
         setMessageArray([...messageArray, textMessage]);
         setTextMessage("");
+        setSending(false);
       }, delayInMilliseconds)
     } catch (error) {
       console.error("Error sending message:", error);
@@ -61,6 +64,16 @@ export default function Home() {
       "opacity-50 cursor-not-allowed": !textMessage || !webhookUrl, // Disabled styles
     }
   );
+
+  const inputClass = (isDisabled) =>
+    classNames(
+      "flex-1 p-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500",
+      {
+        "opacity-50 cursor-not-allowed": isDisabled, // Disabled styles
+      }
+    );
+
+  const sendText = delay > 0 ? `Send in ${delay} ${timeUnit}` : 'Send'
 
   return (
     <div className="flex justify-center">
@@ -113,13 +126,14 @@ export default function Home() {
           placeholder="Type your message..."
           value={textMessage}
           onChange={handleInputChange}
-          className="flex-1 p-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          disabled={isSending}
+          className={inputClass(isSending)}
         />
         <button className={buttonClass}
         onClick={handleSendMessage}
-        disabled={!textMessage || !webhookUrl}
+        disabled={!textMessage || !webhookUrl || isSending}
         >
-          {delay > 0 ? `Send in ${delay} ${timeUnit}` : 'Send'}
+          {isSending ? "Sending..." : sendText}
         </button>
       </footer>
     </div>
