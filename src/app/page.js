@@ -1,96 +1,128 @@
-import Image from "next/image";
+"use client"
+
+import { useState } from "react";
+import classNames from "classnames";
+import sendMessage from "./endpoint";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        DEPLOY NEXT JS EXAMPLE
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            2nd deploy next js
-          </li>
-        </ol>
+  
+  const [textMessage, setTextMessage] = useState("");
+  const [webhookUrl, setWebhookUrl] = useState("");
+  const [delay, setDelay] = useState(0);
+  const [timeUnit, setTimeUnit] = useState("seconds");
+  const [messageArray, setMessageArray] = useState([]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
+  const handleInputChange = (event) => {
+    setTextMessage(event.target.value);
+  }
+
+  const handleWebhookInputChange = (event) => {
+    setWebhookUrl(event.target.value);
+  }
+
+  const handleDelayInputChange = (event) => {
+    setDelay(event.target.value);
+  }
+
+  const handleTimeUnitChange = (event) => {
+    setTimeUnit(event.target.value);
+  }
+
+  const convertToMilliseconds = (delay, timeUnit) => {
+    switch (timeUnit) {
+      case "seconds":
+        return delay * 1000;
+      case "minutes":
+        return delay * 60 * 1000;
+      case "hours":
+        return delay * 60 * 60 * 1000;
+      default:
+        return 0;
+    }
+  }
+
+  const handleSendMessage = async () => {
+    try {
+      const delayInMilliseconds = convertToMilliseconds(delay, timeUnit);
+      setTimeout(async () => {
+        const response = await sendMessage(textMessage, webhookUrl);
+        setMessageArray([...messageArray, textMessage]);
+        setTextMessage("");
+      }, delayInMilliseconds)
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  }
+
+  const buttonClass = classNames(
+    "bg-blue-600 text-white font-medium py-2 px-4 rounded-lg",
+    {
+      "hover:bg-blue-700": delay && textMessage && webhookUrl, // Enable hover only if all fields are filled
+      "opacity-50 cursor-not-allowed": !textMessage || !webhookUrl, // Disabled styles
+    }
+  );
+
+  return (
+    <div className="flex justify-center">
+    <div className="flex flex-col bg-gray-100 dark:bg-gray-900 min-h-[500px] w-[500px]">
+      <header className="bg-blue-600 text-white p-4 flex items-center justify-between">
+        <h1 className="text-lg font-bold">Messaging App</h1>
+      </header>
+
+      <main className="flex-1 overflow-y-auto p-4 space-y-4">
+        {
+          messageArray.map((message, index) => (
+            <div className="flex justify-end" key={index}>
+              <div className="bg-blue-500 text-white p-3 rounded-lg shadow-md max-w-xs">
+                <p className="text-sm">{message}</p>
+              </div>
+            </div>
+          ))
+        }
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+        <div className="p-4 bg-gray-200 dark:bg-gray-800 flex items-center space-x-3">
+            <input
+            type="text"
+            placeholder="input"
+            value={delay}
+            onChange={handleDelayInputChange}
+            className="flex-1 p-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <select
+            value={timeUnit}
+            onChange={handleTimeUnitChange}
+            className="p-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="seconds">Seconds</option>
+            <option value="minutes">Minutes</option>
+            <option value="hours">Hours</option>
+          </select>
+        </div>
+        <div className="p-4 bg-gray-200 dark:bg-gray-800 flex items-center space-x-3">
+          <input
+          type="text"
+          placeholder="Input for Webhook URL"
+          value={webhookUrl}
+          onChange={handleWebhookInputChange}
+          className="flex-1 p-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        </div>
+      <footer className="p-4 bg-gray-200 dark:bg-gray-800 flex items-center space-x-3">
+        <input
+          type="text"
+          placeholder="Type your message..."
+          value={textMessage}
+          onChange={handleInputChange}
+          className="flex-1 p-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button className={buttonClass}
+        onClick={handleSendMessage}
+        disabled={!textMessage || !webhookUrl}
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+          {delay > 0 ? `Send in ${delay} ${timeUnit}` : 'Send'}
+        </button>
       </footer>
+    </div>
     </div>
   );
 }
